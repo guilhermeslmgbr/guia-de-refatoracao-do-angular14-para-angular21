@@ -177,6 +177,47 @@ O diagrama a seguir sintetiza e destaca visualmente as principais mudanças na �
 
 ---
 
+## 8.4 Evolução de Dependências, Tooling e Impacto Arquitetural (package.json)
+
+A modernização do arquivo de manifesto de dependências (`package.json`) evidencia o salto técnico entre o ecossistema do Angular 14 e a arquitetura Angular 21.x, destacando a eliminação de redundâncias, a troca da suíte de testes e o ganho de eficiência no build.
+
+| Categoria | Projeto Legado (Angular 14) | Projeto Modernizado (Angular 21.x) | Impacto Técnico e Justificativa |
+| :--- | :--- | :--- | :--- |
+| **Framework Base** | `@angular/* ^14.0.0` | `@angular/* ^21.2.0` | Atualização do ecossistema principal habilitando suporte nativo a Standalone Components, APIs funcionais de roteamento (`provideRouter`), injeção com `inject()` e reatividade moderna. |
+| **Execução & Polyfills** | `zone.js ~0.11.4`<br>`@angular/animations ^14.0.0` | *Removidos do manifesto* | Desacoplamento de dependências pesadas de animação e preparação da arquitetura para execução *zoneless* nativa. |
+| **Suporte REST (Mock)** | N/A | `json-server ^0.17.4` | Inclusão de servidor mock integrado nas dependências do projeto para simulação local precisa de endpoints REST. |
+| **Ferramental de Build** | `@angular-devkit/build-angular ^14.0.3` | `@angular/build ^21.2.24` | Substituição do builder legado pela nova API `@angular/build` alimentada por Esbuild/Vite, acelerando drasticamente o tempo de compilação. |
+| **Suíte de Testes** | `Karma` + `Jasmine`<br>(5 pacotes `karma-*` e `jasmine-*`) | `Vitest ^4.0.8`<br>`jsdom ^28.0.0` | Eliminação completa do Karma/Jasmine em favor do Vitest + jsdom, permitindo execução de testes unitários instantânea no terminal sem necessidade de subir navegador headless Chrome. |
+| **Padronização de Código** | N/A | `prettier ^3.8.1` | Introdução de formatador de código opinativo para garantir consistência estilística entre os arquivos do repositório. |
+| **Linguagem & Runtime** | `typescript ~4.7.2`<br>`rxjs ~7.5.0` | `typescript ~5.9.2`<br>`rxjs ~7.8.0` | Upgrade da linguagem para TypeScript 5.x, garantindo tipagem mais rigorosa, suporte às novas features do ECMAScript e otimização no tempo de checagem estática. |
+| **Gerenciador de Pacotes** | N/A | `npm@10.8.2` | Fixação da versão do `packageManager` para garantir determinismo e reprodutibilidade do ambiente de instalação via NPM. |
+
+---
+
+### Análise de Mudança de Sintaxe e Boas Práticas de Atualização
+
+#### 1. Ruptura de Sintaxe em Grandes Saltos de Versão
+Grandes lacunas entre versões major do Angular não trazem apenas correções de bugs, mas verdadeiras **mudanças de paradigma de código**:
+* **Sintaxe de Template:** Substituição de diretivas estruturais antigas (`*ngIf`, `*ngFor`) pelo novo *Control Flow* declarativo e otimizado (`@if`, `@for`, `@switch`).
+* **Gerenciamento de Estado e Reatividade:** Transição de observables puramente imperativos para a Reatividade Primitiva via **Signals** (`signal()`, `computed()`, `effect()`).
+* **Injeção de Dependência:** Substituição da injeção via construtor legada pelo uso funcional do `inject()`.
+
+#### 2. Importância da Manutenção em Versões Recentes (LTS)
+Manter a aplicação em versões ativas e preferencialmente **LTS (Long Term Support)** é uma prática crítica de governança de software que impacta diretamente os pilares operacionais do sistema:
+* **Segurança:** Versões defasadas acumulam vulnerabilidades conhecidas (*CVEs*) em dependências transitivas que deixam de receber *patches* de segurança.
+* **Desempenho e Mecânica:** Atualizações trazem motores de renderização mais otimizados, menor consumo de memória no navegador do cliente e compilações substancialmente mais rápidas com Esbuild/Vite.
+* **Usabilidade e DX (Developer Experience):** Ferramentais modernos e APIs simplificadas reduzem a carga cognitiva da equipe, aceleram o onboarding de novos desenvolvedores e evitam o isolamento tecnológico da aplicação.
+
+#### 3. O Problema Exponencial da Refatoração em Softwares Sem SOLID
+A negligência do ciclo de vida de atualização cria um débito técnico que cresce exponencialmente. Quando a aplicação **não segue os princípios SOLID** (especialmente Responsabilidade Única, Acoplamento Forte e Inversão de Dependência):
+* O custo de migração deixa de ser uma simples atualização de dependências e transforma-se em uma reescrita dolorosa do projeto (*rewrite*).
+* Mudanças em sintaxes depreciadas passam a quebrar partes não relacionadas do código devido ao alto acoplamento dos componentes com módulos legados (`NgModules`).
+* A ausência de abstração e isolamento dificulta a criação de testes automatizados, tornando qualquer refatoração um processo propenso a regressões graves em produção.
+
+> **Nota sobre a estratégia adotada:** A fixação dos pacotes na versão `21.2.x` garante que a aplicação permaneça em um patamar estável e moderno, usufruindo das melhores práticas de arquitetura e desempenho da plataforma, mitigando os riscos de obsolescência programada sem comprometer a estabilidade do ambiente operacional.
+
+---
+
 # 9. Tratamento das respostas da API
 
 Durante a integração com o servidor REST utilizado no estudo, foi identificado um cenário no qual uma operação de consulta poderia retornar os dados encapsulados em uma estrutura de array.
